@@ -1,0 +1,127 @@
+<!doctype html>
+<html>
+  <head>
+    <title>shows</title>
+    <meta charset="utf8" />
+    <script>
+      function setItem(name, value) {
+        localStorage.setItem('robotdana.' + name, JSON.stringify(value))
+      }
+
+      function getItem(name, default_value) {
+        var v = JSON.parse(localStorage.getItem('robotdana.' + name))
+        return (v == null ? default_value : v)
+      }
+
+      var shows = getItem('shows', [])
+
+      function removeShow(show) {
+        var index = shows.indexOf(show)
+        if (index > -1) {
+          shows.splice(index, 1);
+        }
+        setItem('shows', shows)
+        renderShows()
+      }
+
+      function renderStepInput(name) {
+        var input = document.createElement('input')
+        input.setAttribute('type', 'number')
+        input.setAttribute('step', '1')
+        input.setAttribute('min', 1)
+        input.setAttribute('name', name)
+        input.value = 1
+        return input
+      }
+
+      function renderStep(name, callback) {
+        var input = renderStepInput(name)
+        input.value = getItem(name, 1)
+        input.addEventListener('change', function (event) {
+          setItem(name, Number(event.target.value))
+          if (callback) { callback() }
+        })
+        return input
+      }
+
+      function renderRemoveButton(show) {
+        var button = document.createElement('button')
+        button.setAttribute('type', 'button')
+        button.addEventListener('click', function () { removeShow(show) })
+        button.appendChild(document.createTextNode('x'))
+        return button
+      }
+
+      function renderShow(show) {
+        var li = document.createElement('li')
+        li.appendChild(document.createTextNode(show))
+        var episode_input = renderStep('shows.' + show + '.episode')
+        li.appendChild(renderStep('shows.' + show + '.season', function() {
+          setItem('shows.' + show + '.episode', 1)
+          episode_input.value = 1
+        }))
+        li.appendChild(episode_input)
+        li.appendChild(renderRemoveButton(show))
+        return li
+      }
+
+      function addNewShow(event) {
+        event.preventDefault();
+        var new_show = event.target.elements['name'].value
+        if (!new_show) { return }
+
+        shows.push(new_show)
+        setItem('_shows', shows)
+
+        li = renderShow(new_show)
+        event.target.parentNode.insertBefore(li, event.target)
+        new_form = renderNewShow()
+        event.target.parentNode.replaceChild(new_form, event.target)
+        focusFormInput(new_form)
+      }
+
+      function focusFormInput(form_li) {
+        form_li.getElementsByTagName('form')[0].elements['name'].focus()
+      }
+
+      function renderNewShow() {
+        var li = document.createElement('li')
+        var form = document.createElement('form')
+        var input = document.createElement('input')
+        input.setAttribute('name', 'name')
+        form.appendChild(input)
+        form.appendChild(renderStepInput('season'))
+        form.appendChild(renderStepInput('episode'))
+        var submit = document.createElement('input')
+        submit.setAttribute('type', 'submit')
+        submit.value = '✔️'
+        form.appendChild(submit)
+        form.addEventListener('submit', addNewShow)
+        li.appendChild(form)
+        return li
+      }
+
+      function renderShows() {
+        var ul = document.createElement('ul')
+        for (var i = 0; i < shows.length; i++) {
+          ul.appendChild(renderShow(shows[i]))
+        }
+        var form = renderNewShow()
+        ul.appendChild(form)
+        var main = document.getElementsByTagName('main')[0]
+        var new_main = document.createElement('main')
+        document.body.replaceChild(new_main, main)
+        var main = new_main
+        main.appendChild(ul)
+        focusFormInput(form)
+      }
+    </script>
+  </head>
+  <body>
+    <main></main>
+
+    <script>
+      renderShows()
+    </script>
+  </body>
+</html>
