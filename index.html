@@ -3,6 +3,50 @@
   <head>
     <title>shows</title>
     <meta charset="utf8" />
+    <style>
+      html, body, input, textarea {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+      }
+      html, body { margin: 0; padding: 30px 0 0; font-size: 30px;  }
+      ul { margin: 0 auto; padding: 0; width: 100%; max-width: 400px; }
+      li {
+        list-style-type: none;
+        width: 100%;
+        padding: 5px;
+        border-top: 1px solid #ccc;
+      }
+      li:first-child { border-top-width: 0; }
+      form {
+        display: flex;
+      }
+      input[type="text"], input[type="number"] {
+        border: 0;
+      }
+      span, input[type="text"] {
+        flex: 1 1 0;
+        display: inline;
+        min-width: 0;
+      }
+      input {
+        appearance: none;
+        font-size: 30px;
+      }
+      input[type="submit"], button {
+        appearance: none;
+        display: block;
+        border-radius: 0;
+        background: transparent;
+        border: 0;
+        font-size: 10px;
+        width: 40px;
+        cursor: pointer;
+      }
+      input[type="number"] {
+        width: 30px;
+        appearance: none;
+        font-size: 20px;
+      }
+    </style>
     <script>
       function setItem(name, value) {
         localStorage.setItem('robotdana.' + name, JSON.stringify(value))
@@ -48,20 +92,24 @@
         var button = document.createElement('button')
         button.setAttribute('type', 'button')
         button.addEventListener('click', function () { removeShow(show) })
-        button.appendChild(document.createTextNode('x'))
+        button.appendChild(document.createTextNode('✖️'))
         return button
       }
 
       function renderShow(show) {
         var li = document.createElement('li')
-        li.appendChild(document.createTextNode(show))
+        var form = document.createElement('form')
+        var span = document.createElement('span')
+        span.appendChild(document.createTextNode(show))
+        form.appendChild(span)
         var episode_input = renderStep('shows.' + show + '.episode')
-        li.appendChild(renderStep('shows.' + show + '.season', function() {
+        form.appendChild(renderStep('shows.' + show + '.season', function() {
           setItem('shows.' + show + '.episode', 1)
           episode_input.value = 1
         }))
-        li.appendChild(episode_input)
-        li.appendChild(renderRemoveButton(show))
+        form.appendChild(episode_input)
+        form.appendChild(renderRemoveButton(show))
+        li.appendChild(form)
         return li
       }
 
@@ -71,12 +119,15 @@
         if (!new_show) { return }
 
         shows.push(new_show)
-        setItem('_shows', shows)
-
-        li = renderShow(new_show)
-        event.target.parentNode.insertBefore(li, event.target)
-        new_form = renderNewShow()
-        event.target.parentNode.replaceChild(new_form, event.target)
+        setItem('shows', shows)
+        setItem('shows.' + new_show + '.season', event.target.elements['season'].value)
+        setItem('shows.' + new_show + '.episode', event.target.elements['episode'].value)
+        var li = renderShow(new_show)
+        var parentLi = event.target.parentNode
+        console.log(parentLi)
+        parentLi.parentNode.insertBefore(li, parentLi)
+        var new_form = renderNewShow()
+        parentLi.parentNode.replaceChild(new_form, parentLi)
         focusFormInput(new_form)
       }
 
@@ -89,6 +140,7 @@
         var form = document.createElement('form')
         var input = document.createElement('input')
         input.setAttribute('name', 'name')
+        input.setAttribute('type', 'text')
         form.appendChild(input)
         form.appendChild(renderStepInput('season'))
         form.appendChild(renderStepInput('episode'))
